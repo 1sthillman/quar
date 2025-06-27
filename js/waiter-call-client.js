@@ -280,8 +280,7 @@ async function callWaiter() {
         const { error: tableError } = await supabase
             .from('tables')
             .update({
-                status: 'calling',
-                updated_at: new Date().toISOString()
+                status: 'calling'
             })
             .eq('id', tableId);
             
