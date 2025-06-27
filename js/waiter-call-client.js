@@ -10,38 +10,14 @@ let tableId = null;
 let currentCallId = null;
 let isCallActive = false;
 let currentStatus = 'idle';
-let connectionAttempts = 0;
-const MAX_CONNECTION_ATTEMPTS = 3;
-
-// Meteor efekti için CSS ekle
-function addMeteorStyles() {
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-        @keyframes meteor {
-            0% { transform: rotate(215deg) translateX(0); opacity: 1; }
-            70% { opacity: 1; }
-            100% { transform: rotate(215deg) translateX(-500px); opacity: 0; }
-        }
-        
-        .meteor {
-            animation: meteor 5s linear infinite;
-        }
-    `;
-    document.head.appendChild(styleEl);
-}
 
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Sayfa yüklendi');
     
-    // Meteor animasyonu için CSS ekle
-    addMeteorStyles();
-    
     // URL parametrelerini al
     const urlParams = new URLSearchParams(window.location.search);
     restaurantId = urlParams.get('restaurant_id');
-    
-    // table_id veya table parametresi kontrolü
     tableNumber = urlParams.get('table_id') || urlParams.get('table');
     
     // Değerler yoksa hata göster ve yükleme ekranını kaldır
@@ -64,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Çağrı butonunu ayarla
     setupCallButton();
     
-    // Yükleme yavaş olsa bile 5 saniye sonra her durumda yükleme ekranını gizle
-    setTimeout(hideLoader, 5000);
+    // Yükleme ekranını 3 saniye sonra her durumda kaldır
+    setTimeout(hideLoader, 3000);
 });
 
 // Yükleme ekranını gizle
@@ -78,7 +54,7 @@ function hideLoader() {
     }
     
     if (content) {
-        content.style.display = 'flex';
+        content.style.display = 'block';
     }
 }
 
@@ -161,9 +137,6 @@ async function checkOrCreateTable() {
         // Buton durumunu güncelle
         updateButtonState();
         
-        // Realtime bağlantıyı kur
-        setupRealtimeConnection();
-        
     } catch (err) {
         console.error('Masa kontrolü hatası:', err);
         throw err;
@@ -232,7 +205,7 @@ async function callWaiter() {
     const callButton = document.getElementById('callWaiterButton');
     if (callButton) {
         callButton.disabled = true;
-        callButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i> Çağrılıyor...';
+        callButton.innerHTML = '<span style="margin-right: 8px;">⏳</span> Çağrılıyor...';
     }
     
     try {
@@ -255,7 +228,7 @@ async function callWaiter() {
             // Butonu tekrar aktif et
             if (callButton) {
                 callButton.disabled = false;
-                callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
+                callButton.innerHTML = '<span style="margin-right: 8px;">👋</span> Garsonu Çağır';
             }
             return;
         }
@@ -281,9 +254,6 @@ async function callWaiter() {
         // Buton durumunu güncelle
         updateButtonState();
         
-        // Realtime bağlantıyı yeniden kur
-        setupRealtimeConnection();
-        
     } catch (err) {
         console.error('Garson çağırma sırasında hata:', err);
         showError('Bir hata oluştu. Lütfen tekrar deneyin.');
@@ -291,7 +261,7 @@ async function callWaiter() {
         // Butonu tekrar aktif et
         if (callButton) {
             callButton.disabled = false;
-            callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
+            callButton.innerHTML = '<span style="margin-right: 8px;">👋</span> Garsonu Çağır';
         }
     }
 }
@@ -308,111 +278,15 @@ function updateButtonState() {
     if (currentStatus === 'calling') {
         callButton.disabled = true;
         callButton.classList.add('calling');
-        callButton.innerHTML = '<i class="ri-time-line mr-2"></i> Garson Geliyor';
+        callButton.innerHTML = '<span style="margin-right: 8px;">⏳</span> Garson Geliyor';
     } else if (currentStatus === 'serving') {
         callButton.disabled = true;
         callButton.classList.add('serving');
-        callButton.innerHTML = '<i class="ri-user-smile-line mr-2"></i> Garson Geliyor';
+        callButton.innerHTML = '<span style="margin-right: 8px;">✅</span> Garson Geliyor';
     } else {
         // idle durumu - çağrı yapılabilir
         callButton.disabled = false;
-        callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
-    }
-}
-
-// Realtime bağlantıyı kur
-function setupRealtimeConnection() {
-    if (!supabase) {
-        console.error('Supabase bağlantısı yok, realtime dinleme yapılamıyor');
-        return;
-    }
-    
-    if (!tableId) {
-        console.error('Masa ID yok, realtime dinleme yapılamıyor');
-        return;
-    }
-    
-    console.log('Realtime bağlantı kuruluyor...', { tableId, currentCallId });
-    
-    try {
-        // Önceki kanalları temizle
-        supabase.removeAllChannels();
-        
-        // Masa durumu değişikliklerini dinle
-        const tableChannel = supabase
-            .channel(`table-status-${tableId}`)
-            .on('postgres_changes', { 
-                event: '*', 
-                schema: 'public', 
-                table: 'tables',
-                filter: `id=eq.${tableId}`
-            }, payload => {
-                console.log('Masa durumu değişti:', payload);
-                
-                if (payload.new && payload.new.status) {
-                    currentStatus = payload.new.status;
-                    console.log(`Masa durumu güncellendi: ${currentStatus}`);
-                    
-                    if (currentStatus === 'serving') {
-                        showWaiterResponse('Garsonunuz geliyor!');
-                        
-                        // Buton durumunu güncelle
-                        const callButton = document.getElementById('callWaiterButton');
-                        if (callButton) {
-                            callButton.disabled = true;
-                            callButton.classList.add('serving');
-                            callButton.classList.remove('calling', 'ready-to-recall');
-                            callButton.innerHTML = '<i class="ri-user-smile-line mr-2"></i> Garson Geliyor';
-                        }
-                    } else if (currentStatus === 'idle') {
-                        isCallActive = false;
-                        currentCallId = null;
-                        showWaiterResponse('Çağrınız tamamlandı.');
-                        
-                        // Butonu normal haline getir
-                        const callButton = document.getElementById('callWaiterButton');
-                        if (callButton) {
-                            // Butonu aktifleştir
-                            callButton.disabled = false;
-                            callButton.classList.remove('calling', 'serving', 'ready-to-recall');
-                            callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
-                        }
-                    }
-                    
-                    // Her durumda butonun genel durumunu güncelle
-                    updateButtonState();
-                }
-            })
-            .subscribe(status => {
-                console.log('Masa durumu dinleme durumu:', status);
-            });
-        
-        // Çağrı durumu değişikliklerini dinle
-        if (currentCallId) {
-            const callChannel = supabase
-                .channel(`call-status-${currentCallId}`)
-                .on('postgres_changes', { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'calls',
-                    filter: `id=eq.${currentCallId}`
-                }, payload => {
-                    console.log('Çağrı durumu değişti:', payload);
-                    
-                    if (payload.new && payload.new.status === 'acknowledged') {
-                        showWaiterResponse('Garsonunuz çağrınızı onayladı ve geliyor!');
-                        isCallActive = false;
-                        currentStatus = 'serving';
-                        
-                        updateButtonState();
-                    }
-                })
-                .subscribe(status => {
-                    console.log('Çağrı durumu dinleme durumu:', status);
-                });
-        }
-    } catch (error) {
-        console.error('Realtime bağlantı kurulurken hata:', error);
+        callButton.innerHTML = '<span style="margin-right: 8px;">👋</span> Garsonu Çağır';
     }
 }
 
@@ -459,15 +333,4 @@ function showWaiterResponse(message) {
         }, 5000);
     }
     console.log('Garson cevabı:', message);
-}
-
-// Butonu tekrar çağırma durumuna getir
-function enableRecallButton() {
-    const callButton = document.getElementById('callWaiterButton');
-    if (!callButton) return;
-    
-    callButton.disabled = false;
-    callButton.classList.remove('calling', 'serving');
-    callButton.classList.add('ready-to-recall');
-    callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Tekrar Çağır';
 } 
