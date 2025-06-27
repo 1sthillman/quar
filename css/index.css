@@ -1,0 +1,161 @@
+* {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    box-sizing: border-box;
+}
+
+body {
+    -webkit-touch-callout: none;
+    -webkit-text-size-adjust: none;
+    -webkit-user-select: none;
+    background: linear-gradient(135deg, #111, #222);
+    color: #fff;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size:12px;
+    height:100vh;
+    margin:0px;
+    padding:0px;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    text-transform:uppercase;
+    width:100%;
+    overflow-x: hidden;
+}
+
+/* Modern Yükleme Ekranı */
+#loadingPage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0a15, #151525);
+    min-height: 100vh;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+}
+
+#loadingPage .spinner {
+    width: 40px;
+    height: 40px;
+    position: relative;
+}
+
+#loadingPage .spinner:before {
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin-top: -15px;
+    margin-left: -15px;
+    border-radius: 50%;
+    border: 2px solid #FF6B35;
+    border-top-color: transparent;
+    animation: spinner .8s linear infinite;
+}
+
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+
+#qrPage {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#qrPage.visible {
+    opacity: 1;
+}
+
+/* Neo Gradient Tema */
+:root {
+    --neo-primary: #FF6B35;
+    --neo-secondary: #3A86FF;
+    --neo-dark: #111111;
+    --neo-light: #ffffff;
+    --neo-success: #00d26a;
+    --neo-danger: #ff3a5e;
+    --neo-card: #1a1a25;
+    --neo-border: rgba(255, 255, 255, 0.08);
+    --neo-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --neo-glow: 0 0 15px rgba(255, 107, 53, 0.3);
+    --card-border-radius: 16px;
+}
+
+/* Glassmorphism container stilleri */
+header, nav, section, article, aside, footer, .card {
+    background: rgba(26, 26, 37, 0.8) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--neo-border);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--neo-shadow);
+}
+
+/* Form ögeleri */
+a, button, input, select, textarea {
+    background: rgba(26, 26, 37, 0.5) !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid var(--neo-border);
+    border-radius: 10px;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+/* Buton hover efekti */
+button {
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: rgba(255, 107, 53, 0.15) !important;
+    box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+    border-color: rgba(255, 107, 53, 0.3);
+}
+
+/* Animasyon Efektleri */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.9); }
+}
+
+/* GitHub Pages Compatibility Fixes */
+.callWaiterButton {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    cursor: pointer !important;
+    font-size: 1rem !important;
+    transition: all 0.3s ease !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 8px !important;
+    background-color: var(--neo-primary) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.callWaiterButton:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3) !important;
+}
+
+.callWaiterButton:active {
+    transform: translateY(0) !important;
+}
+
+.callWaiterButton.calling, 
+.callWaiterButton.serving {
+    opacity: 0.7;
+    cursor: not-allowed;
+} 
