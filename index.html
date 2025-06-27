@@ -7,13 +7,12 @@
     <meta name="description" content="Restoran Garson Çağır Servisi">
     <title>Garson Çağır</title>
     
-    <!-- Temel CSS -->
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
         
         body {
@@ -27,7 +26,7 @@
             padding: 20px;
         }
         
-        #loadingPage {
+        #loadingScreen {
             position: fixed;
             top: 0;
             left: 0;
@@ -38,6 +37,7 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            flex-direction: column;
         }
         
         .spinner {
@@ -46,21 +46,22 @@
             border-radius: 50%;
             border: 3px solid rgba(255, 107, 53, 0.3);
             border-top-color: #FF6B35;
-            animation: spinner 0.8s linear infinite;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
         }
         
-        @keyframes spinner {
+        @keyframes spin {
             to {transform: rotate(360deg);}
         }
         
-        #qrPage {
+        #mainContent {
             display: none;
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             text-align: center;
         }
         
-        header {
+        .restaurant-info {
             margin-bottom: 30px;
         }
         
@@ -71,8 +72,6 @@
         
         .card {
             background-color: rgba(26, 26, 37, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 20px;
@@ -89,14 +88,14 @@
             margin-bottom: 20px;
         }
         
-        .callWaiterButton {
+        #callButton {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             background-color: #FF6B35;
             color: white;
             border: none;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -105,61 +104,48 @@
             transition: all 0.3s ease;
         }
         
-        .callWaiterButton:hover {
+        #callButton:hover {
             background-color: #ff5722;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
         }
         
-        .callWaiterButton:active {
+        #callButton:active {
             transform: translateY(0);
         }
         
-        .callWaiterButton.calling {
+        #callButton.calling {
             background-color: #FF6B35;
-            animation: pulse-calling 2s infinite;
+            animation: pulse 2s infinite;
         }
         
-        .callWaiterButton.serving {
+        #callButton.acknowledged {
             background-color: #3A86FF;
-            animation: pulse-serving 2s infinite;
+            animation: pulse 2s infinite;
         }
         
-        @keyframes pulse-calling {
+        @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.6); }
             70% { box-shadow: 0 0 0 10px rgba(255, 107, 53, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
         }
         
-        @keyframes pulse-serving {
-            0% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0.6); }
-            70% { box-shadow: 0 0 0 10px rgba(58, 134, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0); }
-        }
-        
-        .alert {
+        .message {
             padding: 16px;
             border-radius: 8px;
             margin-bottom: 16px;
             display: none;
         }
         
-        #errorAlert {
+        #errorMessage {
             background-color: rgba(239, 68, 68, 0.2);
             border: 1px solid rgba(239, 68, 68, 0.3);
             color: #fca5a5;
         }
         
-        #successAlert {
+        #successMessage {
             background-color: rgba(34, 197, 94, 0.2);
             border: 1px solid rgba(34, 197, 94, 0.3);
             color: #86efac;
-        }
-        
-        #waiterResponseAlert {
-            background-color: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #93c5fd;
         }
         
         footer {
@@ -174,39 +160,235 @@
 </head>
 <body>
     <!-- Yükleme Ekranı -->
-    <div id="loadingPage">
-        <div class="text-center">
-            <div class="spinner"></div>
-            <p style="margin-top: 20px;">Yükleniyor...</p>
-        </div>
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Yükleniyor...</p>
     </div>
     
-    <!-- Ana Sayfa -->
-    <div id="qrPage">
-        <header>
+    <!-- Ana İçerik -->
+    <div id="mainContent">
+        <div class="restaurant-info">
             <h1 id="restaurantName">Restaurant</h1>
             <p>Masa <span id="tableNumber" style="font-weight: bold;">0</span></p>
-        </header>
+        </div>
         
         <div class="card">
             <h2>Garson Çağırma</h2>
-            <p>Garsona ihtiyacınız olduğunda aşağıdaki butona tıklayarak çağırabilirsiniz.</p>
+            <p>Garsona ihtiyacınız olduğunda butona tıklayarak çağırabilirsiniz.</p>
             
-            <button id="callWaiterButton" class="callWaiterButton">
+            <button id="callButton">
                 <span style="margin-right: 8px;">👋</span> Garsonu Çağır
             </button>
         </div>
         
         <!-- Bildirimler -->
-        <div id="errorAlert" class="alert"></div>
-        <div id="successAlert" class="alert"></div>
-        <div id="waiterResponseAlert" class="alert"></div>
+        <div id="errorMessage" class="message"></div>
+        <div id="successMessage" class="message"></div>
         
         <footer>
             <p>QR Garson Çağırma Sistemi</p>
         </footer>
     </div>
     
-    <script src="js/waiter-call-client.js"></script>
+    <script>
+        // Supabase bağlantısı
+        const SUPABASE_URL = 'https://wihdzkvgttfwsiijxidy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpaGR6a3ZndHRmd3NpaWp4aWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MzA0MjIsImV4cCI6MjA2NjIwNjQyMn0.Cpn6y7ybyLA3uL-bjvsxPKoIw-J7I6eTE5cPGnBjOo4';
+        
+        // Global değişkenler
+        let supabase;
+        let restaurantId = '';
+        let tableNumber = '';
+        let tableId = null;
+        let isCallActive = false;
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            // URL parametrelerini al
+            const urlParams = new URLSearchParams(window.location.search);
+            restaurantId = urlParams.get('restaurant_id');
+            tableNumber = urlParams.get('table_id') || urlParams.get('table');
+            
+            // Değerler yoksa hata göster
+            if (!restaurantId || !tableNumber) {
+                hideLoading();
+                showError('QR kodda eksik bilgi var. Lütfen geçerli bir QR kod kullanın.');
+                return;
+            }
+            
+            // Masa ve restoran bilgilerini göster
+            document.getElementById('restaurantName').textContent = `Restaurant ${restaurantId}`;
+            document.getElementById('tableNumber').textContent = tableNumber;
+            
+            // Supabase'i başlat
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                initApp();
+            } catch (error) {
+                console.error('Supabase başlatma hatası:', error);
+                hideLoading();
+                showError('Bağlantı hatası. Lütfen tekrar deneyin.');
+            }
+            
+            // Yükleme ekranını 2 saniye sonra her durumda kaldır
+            setTimeout(hideLoading, 2000);
+        });
+
+        // Uygulama başlatma
+        async function initApp() {
+            // Masa kaydını kontrol et
+            try {
+                const { data, error } = await supabase
+                    .from('tables')
+                    .select('id, status')
+                    .eq('restaurant_id', restaurantId)
+                    .eq('number', parseInt(tableNumber))
+                    .maybeSingle();
+                
+                if (error) throw error;
+                
+                if (data) {
+                    // Masa bulundu
+                    tableId = data.id;
+                    
+                    // Aktif çağrı var mı kontrol et
+                    const { data: callData } = await supabase
+                        .from('calls')
+                        .select('id, status')
+                        .eq('table_id', tableId)
+                        .eq('status', 'requested')
+                        .maybeSingle();
+                    
+                    if (callData) {
+                        isCallActive = true;
+                        updateButtonState('calling');
+                    }
+                } else {
+                    // Masa yoksa oluştur
+                    const { data: newTable, error: insertError } = await supabase
+                        .from('tables')
+                        .insert({
+                            restaurant_id: restaurantId,
+                            number: parseInt(tableNumber),
+                            status: 'idle'
+                        })
+                        .select()
+                        .single();
+                    
+                    if (insertError) throw insertError;
+                    tableId = newTable.id;
+                }
+                
+                // Çağrı butonunu ayarla
+                setupCallButton();
+                
+            } catch (err) {
+                console.error('Hata:', err);
+                showError('Bağlantı hatası. Lütfen tekrar deneyin.');
+            }
+            
+            hideLoading();
+        }
+
+        // Yükleme ekranını gizle
+        function hideLoading() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        // Çağrı butonunu ayarla
+        function setupCallButton() {
+            const callButton = document.getElementById('callButton');
+            callButton.addEventListener('click', callWaiter);
+        }
+
+        // Buton durumunu güncelle
+        function updateButtonState(status) {
+            const callButton = document.getElementById('callButton');
+            
+            // Tüm sınıfları temizle
+            callButton.classList.remove('calling', 'acknowledged');
+            
+            if (status === 'calling') {
+                callButton.disabled = true;
+                callButton.classList.add('calling');
+                callButton.innerHTML = '<span style="margin-right: 8px;">⏳</span> Garson Çağrıldı';
+            } else if (status === 'acknowledged') {
+                callButton.disabled = true;
+                callButton.classList.add('acknowledged');
+                callButton.innerHTML = '<span style="margin-right: 8px;">✅</span> Garson Geliyor';
+            } else {
+                callButton.disabled = false;
+                callButton.innerHTML = '<span style="margin-right: 8px;">👋</span> Garsonu Çağır';
+            }
+        }
+
+        // Garson çağırma fonksiyonu
+        async function callWaiter() {
+            if (!supabase || !tableId) {
+                showError('Bağlantı hatası. Lütfen sayfayı yenileyin.');
+                return;
+            }
+            
+            if (isCallActive) {
+                showError('Zaten aktif bir çağrınız var.');
+                return;
+            }
+            
+            // Buton durumunu güncelle
+            updateButtonState('calling');
+            
+            try {
+                // Yeni çağrı oluştur
+                const { data, error } = await supabase
+                    .from('calls')
+                    .insert([
+                        { 
+                            restaurant_id: restaurantId,
+                            table_id: tableId,
+                            status: 'requested'
+                        }
+                    ])
+                    .select();
+                
+                if (error) {
+                    console.error('Çağrı oluşturma hatası:', error);
+                    showError('Çağrı oluşturulamadı. Lütfen tekrar deneyin.');
+                    updateButtonState();
+                    return;
+                }
+                
+                isCallActive = true;
+                showSuccess('Garson çağrınız alındı. En kısa sürede sizinle ilgileneceğiz.');
+                
+            } catch (err) {
+                console.error('Hata:', err);
+                showError('Bir hata oluştu. Lütfen tekrar deneyin.');
+                updateButtonState();
+            }
+        }
+
+        // Hata mesajı göster
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Başarı mesajı göster
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+    </script>
 </body>
 </html> 

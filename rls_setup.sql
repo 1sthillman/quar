@@ -5,7 +5,6 @@
 CREATE TABLE IF NOT EXISTS public.tables (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id TEXT NOT NULL,
-    table_id INTEGER NOT NULL,
     number INTEGER NOT NULL,
     status TEXT DEFAULT 'idle',
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -96,6 +95,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.tables;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.calls;
 
 -- 9. İndeksler ekle (performans için)
-CREATE INDEX IF NOT EXISTS tables_restaurant_table_idx ON public.tables (restaurant_id, table_id);
+CREATE INDEX IF NOT EXISTS tables_restaurant_idx ON public.tables (restaurant_id);
+CREATE INDEX IF NOT EXISTS tables_restaurant_number_idx ON public.tables (restaurant_id, number);
 CREATE INDEX IF NOT EXISTS calls_table_id_idx ON public.calls (table_id);
+CREATE INDEX IF NOT EXISTS calls_restaurant_id_idx ON public.calls (restaurant_id);
 CREATE INDEX IF NOT EXISTS calls_status_idx ON public.calls (status); 
