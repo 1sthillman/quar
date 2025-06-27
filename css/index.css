@@ -129,6 +129,27 @@ button:hover {
     to { opacity: 0; transform: scale(0.9); }
 }
 
+/* Geri sayım sayacı için stiller */
+.countdown {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    display: inline-block;
+    margin-left: 4px;
+}
+
+/* Tekrar çağır butonu için özel stil */
+.callWaiterButton.ready-to-recall {
+    background-color: var(--neo-secondary) !important;
+    animation: pulse-ready 2s infinite;
+}
+
+@keyframes pulse-ready {
+    0% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(58, 134, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0); }
+}
+
 /* GitHub Pages Compatibility Fixes */
 .callWaiterButton {
     display: inline-flex !important;

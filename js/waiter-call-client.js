@@ -12,6 +12,8 @@ let isCallActive = false;
 let currentStatus = 'idle';
 let connectionAttempts = 0;
 const MAX_CONNECTION_ATTEMPTS = 3;
+let callCooldownTimer = null;
+const CALL_COOLDOWN_MINUTES = 3; // Garson çağırma arasındaki bekleme süresi (dakika)
 
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', function() {
@@ -261,6 +263,7 @@ async function callWaiter() {
         
         // Butonu devre dışı bırak
         callButton.disabled = true;
+        callButton.classList.remove('ready-to-recall');
         callButton.innerHTML = '<i class="ri-loader-2-line animate-spin mr-2"></i> Garson çağrılıyor...';
         
         console.log('Garson çağırma işlemi başlatıldı:', { restaurantId, tableNumber, tableId });
@@ -281,6 +284,7 @@ async function callWaiter() {
             .from('tables')
             .update({
                 status: 'calling'
+                // updated_at sütunu otomatik olarak Supabase tarafından güncelleniyor
             })
             .eq('id', tableId);
             
@@ -299,6 +303,7 @@ async function callWaiter() {
             .insert({
                 table_id: tableId,
                 status: 'requested'
+                // created_at ve updated_at sütunları otomatik olarak Supabase tarafından ekleniyor
             })
             .select();
             
@@ -347,10 +352,16 @@ function updateButtonState() {
         callButton.disabled = true;
         callButton.classList.add('calling');
         callButton.innerHTML = '<i class="ri-time-line mr-2"></i> Garson Geliyor';
+        
+        // Garson çağrıldıktan belirli bir süre sonra butonu tekrar aktif et
+        startCallCooldown();
     } else if (currentStatus === 'serving') {
         callButton.disabled = true;
         callButton.classList.add('serving');
         callButton.innerHTML = '<i class="ri-user-smile-line mr-2"></i> Garson Geliyor';
+        
+        // Garson hizmet verirken de zamanlayıcıyı başlat
+        startCallCooldown();
     } else {
         callButton.disabled = false;
         callButton.classList.remove('calling', 'serving');
@@ -364,6 +375,60 @@ function resetCallButton(button) {
     
     button.disabled = false;
     button.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
+}
+
+// Garson çağırma için bekleme süresini başlat
+function startCallCooldown() {
+    // Önceki zamanlayıcıyı temizle
+    if (callCooldownTimer) {
+        clearTimeout(callCooldownTimer);
+    }
+    
+    // Yeni zamanlayıcıyı başlat
+    const cooldownMs = CALL_COOLDOWN_MINUTES * 60 * 1000;
+    callCooldownTimer = setTimeout(() => {
+        if (currentStatus === 'calling' || currentStatus === 'serving') {
+            // Eğer garson hala gelmediyse veya hizmet veriyorsa, tekrar çağırabilme imkanı ver
+            const callButton = document.getElementById('callWaiterButton');
+            if (callButton) {
+                callButton.disabled = false;
+                callButton.classList.remove('calling', 'serving');
+                callButton.classList.add('ready-to-recall');
+                callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Tekrar Çağır';
+                
+                // Durum değişmedi ancak butonu aktif ettik
+                showWaiterResponse('Garson hala gelmediyse tekrar çağırabilirsiniz.');
+            }
+        }
+    }, cooldownMs);
+    
+    // Kalan süreyi gösteren bir sayaç başlat
+    updateCooldownCounter(cooldownMs);
+}
+
+// Kalan süre sayacını güncelle
+function updateCooldownCounter(remainingMs) {
+    const callButton = document.getElementById('callWaiterButton');
+    if (!callButton) return;
+    
+    // Eğer kalan süre 0'dan küçükse işlemi sonlandır
+    if (remainingMs <= 0) {
+        return;
+    }
+    
+    // Kalan dakika ve saniyeyi hesapla
+    const minutes = Math.floor(remainingMs / 60000);
+    const seconds = Math.floor((remainingMs % 60000) / 1000);
+    
+    // Butona kalan süreyi ekle
+    if (currentStatus === 'calling' || currentStatus === 'serving') {
+        callButton.innerHTML = `<i class="ri-time-line mr-2"></i> Garson Geliyor <span class="countdown">${minutes}:${seconds.toString().padStart(2, '0')}</span>`;
+    }
+    
+    // Her saniye güncelle
+    setTimeout(() => {
+        updateCooldownCounter(remainingMs - 1000);
+    }, 1000);
 }
 
 // Realtime bağlantıyı kur
@@ -402,10 +467,26 @@ function setupRealtimeConnection() {
                     
                     if (currentStatus === 'serving') {
                         showWaiterResponse('Garsonunuz geliyor!');
+                        // Servis durumunda zamanlayıcıyı başlat
+                        startCallCooldown();
                     } else if (currentStatus === 'idle') {
                         isCallActive = false;
                         currentCallId = null;
                         showWaiterResponse('Çağrınız tamamlandı.');
+                        
+                        // İşlem tamamlandığında zamanlayıcıyı temizle
+                        if (callCooldownTimer) {
+                            clearTimeout(callCooldownTimer);
+                            callCooldownTimer = null;
+                        }
+                        
+                        // Butonu normal haline getir
+                        const callButton = document.getElementById('callWaiterButton');
+                        if (callButton) {
+                            callButton.disabled = false;
+                            callButton.classList.remove('calling', 'serving');
+                            callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
+                        }
                     }
                 }
             })
