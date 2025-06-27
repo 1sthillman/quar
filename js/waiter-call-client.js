@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Masa ve restoran bilgilerini göster
     document.getElementById('restaurantName').textContent = `Restaurant ${restaurantId}`;
+    document.getElementById('tableNumber').textContent = tableNumber;
     
     // Masa kaydını kontrol et veya oluştur
     checkOrCreateTable()
@@ -229,7 +230,7 @@ async function checkOrCreateTable() {
             .from('tables')
             .select('id, status')
             .eq('restaurant_id', restaurantId)
-            .eq('table_id', parseInt(tableNumber))
+            .eq('number', parseInt(tableNumber))
             .single();
         
         if (error && error.code !== 'PGRST116') { // PGRST116: No rows returned
@@ -248,7 +249,6 @@ async function checkOrCreateTable() {
                 .from('tables')
                 .insert({
                     restaurant_id: restaurantId,
-                    table_id: parseInt(tableNumber),
                     number: parseInt(tableNumber),
                     status: 'idle'
                 })
@@ -354,7 +354,7 @@ async function callWaiter() {
                     restaurant_id: restaurantId,
                     table_id: tableId,
                     table_number: tableNumber,
-                    status: 'pending'
+                    status: 'requested'
                 }
             ])
             .select();
