@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.tables (
 
 CREATE TABLE IF NOT EXISTS public.calls (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    restaurant_id TEXT NOT NULL,
     table_id UUID NOT NULL REFERENCES public.tables(id),
     status TEXT DEFAULT 'requested',
     created_at TIMESTAMPTZ DEFAULT now(),

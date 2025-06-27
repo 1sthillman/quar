@@ -243,7 +243,6 @@ async function callWaiter() {
                 { 
                     restaurant_id: restaurantId,
                     table_id: tableId,
-                    table_number: tableNumber,
                     status: 'requested'
                 }
             ])
