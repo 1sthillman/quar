@@ -129,13 +129,54 @@ button:hover {
     to { opacity: 0; transform: scale(0.9); }
 }
 
-/* Geri sayım sayacı için stiller */
+/* Garson geliyor animasyonu */
+.callWaiterButton.calling,
+.callWaiterButton.serving {
+    opacity: 0.85;
+    cursor: not-allowed;
+    position: relative;
+    overflow: hidden;
+}
+
+.callWaiterButton.calling {
+    background-color: #FF6B35 !important;
+    animation: pulse-calling 2s infinite;
+}
+
+.callWaiterButton.serving {
+    background-color: #3A86FF !important;
+    animation: pulse-serving 2s infinite;
+}
+
+@keyframes pulse-calling {
+    0% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 107, 53, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
+}
+
+@keyframes pulse-serving {
+    0% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(58, 134, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0); }
+}
+
+/* Geri sayım sayacı için stiller - daha belirgin */
 .countdown {
     font-size: 0.9rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.9);
     display: inline-block;
-    margin-left: 4px;
+    margin-left: 6px;
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 
 /* Tekrar çağır butonu için özel stil */
@@ -173,10 +214,4 @@ button:hover {
 
 .callWaiterButton:active {
     transform: translateY(0) !important;
-}
-
-.callWaiterButton.calling, 
-.callWaiterButton.serving {
-    opacity: 0.7;
-    cursor: not-allowed;
 } 

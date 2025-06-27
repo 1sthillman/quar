@@ -348,6 +348,9 @@ function updateButtonState() {
     const callButton = document.getElementById('callWaiterButton');
     if (!callButton) return;
     
+    // Önce tüm sınıfları temizle
+    callButton.classList.remove('calling', 'serving', 'ready-to-recall');
+    
     if (currentStatus === 'calling') {
         callButton.disabled = true;
         callButton.classList.add('calling');
@@ -363,8 +366,8 @@ function updateButtonState() {
         // Garson hizmet verirken de zamanlayıcıyı başlat
         startCallCooldown();
     } else {
+        // idle durumu
         callButton.disabled = false;
-        callButton.classList.remove('calling', 'serving');
         callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
     }
 }
@@ -411,8 +414,12 @@ function updateCooldownCounter(remainingMs) {
     const callButton = document.getElementById('callWaiterButton');
     if (!callButton) return;
     
-    // Eğer kalan süre 0'dan küçükse işlemi sonlandır
+    // Eğer kalan süre 0'dan küçük veya eşitse işlemi sonlandır
     if (remainingMs <= 0) {
+        // Süre dolduğunda butonu güncelle
+        if (currentStatus === 'calling' || currentStatus === 'serving') {
+            callButton.innerHTML = `<i class="ri-time-line mr-2"></i> Garson Geliyor`;
+        }
         return;
     }
     
@@ -463,12 +470,20 @@ function setupRealtimeConnection() {
                 if (payload.new && payload.new.status) {
                     currentStatus = payload.new.status;
                     console.log(`Masa durumu güncellendi: ${currentStatus}`);
-                    updateButtonState();
                     
                     if (currentStatus === 'serving') {
                         showWaiterResponse('Garsonunuz geliyor!');
                         // Servis durumunda zamanlayıcıyı başlat
                         startCallCooldown();
+                        
+                        // Buton durumunu güncelle
+                        const callButton = document.getElementById('callWaiterButton');
+                        if (callButton) {
+                            callButton.disabled = true;
+                            callButton.classList.add('serving');
+                            callButton.classList.remove('calling', 'ready-to-recall');
+                            callButton.innerHTML = '<i class="ri-user-smile-line mr-2"></i> Garson Geliyor';
+                        }
                     } else if (currentStatus === 'idle') {
                         isCallActive = false;
                         currentCallId = null;
@@ -484,10 +499,13 @@ function setupRealtimeConnection() {
                         const callButton = document.getElementById('callWaiterButton');
                         if (callButton) {
                             callButton.disabled = false;
-                            callButton.classList.remove('calling', 'serving');
+                            callButton.classList.remove('calling', 'serving', 'ready-to-recall');
                             callButton.innerHTML = '<i class="ri-user-voice-line mr-2"></i> Garsonu Çağır';
                         }
                     }
+                    
+                    // Her durumda butonun genel durumunu güncelle
+                    updateButtonState();
                 }
             })
             .subscribe(status => {
